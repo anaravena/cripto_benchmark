@@ -1,4 +1,36 @@
-# Comparação de benchmarks
+# Execução e comparação de benchmarks
+
+
+## Executar benchmarks com `benchmark.py`
+
+Requer Python 3.9 ou superior e usa apenas a biblioteca padrão (`ctypes`). A biblioteca C precisa estar compilada como biblioteca compartilhada compatível com o sistema e a arquitetura do Python.
+
+```bash
+python3 benchmark.py --biblioteca /caminho/libcripto.so \
+  --label "Biblioteca A" --funcoes assina keygen cifracao \
+  --algoritmos classico hibrido pos_quantico --repeticoes 20 \
+  --data-size 512 --aquecimento 2 --json teste_512.json
+```
+
+Repita com `--data-size 1024 --json teste_1024.json`, mantendo o mesmo label, para comparar tamanhos no analisador. Use `python3 benchmark.py --help` para listar as opções. Sem filtros, todas as funções e algoritmos são executados. O label é opcional e fica `null` no JSON quando omitido.
+
+A ABI esperada é `int benchmark_<funcao>(Resultado *, int data_size)` para `cifracao`, `decifracao`, `cifra_autentica` e `decifra_verifica`. Para `keygen`, `assina` e `verifica`, há um terceiro argumento `int algorithm`: clássico=0, híbrido=1 e pós-quântico=2. A estrutura C `Resultado` contém, nesta ordem, `long operacoes_total` e os campos `double tempo_total_s`, `tempo_medio_ms`, `taxa_kbps`, `operacoes_por_segundo`, com alinhamento nativo. As funções selecionadas precisam estar exportadas, sem `static`; em C++, use `extern "C"`. A convenção de chamada é cdecl (`ctypes.CDLL`).
+
+O retorno de sucesso é zero por padrão, ajustável com `--retorno-sucesso`. Retornos inesperados ou resultados negativos/não finitos interrompem a execução com erro. Use apenas bibliotecas confiáveis: falhas de memória no C podem encerrar o processo Python.
+
+`--repeticoes` controla chamadas à função benchmark C por algoritmo, não as operações internas da biblioteca. `NUMERO_DE_OPERACOES` e `TEST_DURATION` continuam definidos no C. Aquecimentos são executados antes de cada combinação e descartados das estatísticas. As chamadas são sequenciais.
+
+O terminal mostra média, mediana, desvio padrão amostral, mínimo, máximo e P95 (interpolação linear). Com uma amostra, o desvio é `n/a`. `tempo_chamada_ms` mede a chamada inteira no Python; as demais métricas são retornadas pelo C. O JSON inclui parâmetros, amostras, estatísticas e taxa agregada (operações totais / tempo total reportado pelo C), sendo compatível com `benchmark_analysis.py`.
+
+Exemplo básico de compilação no Linux (inclua fontes e dependências necessárias ao seu projeto):
+
+```bash
+gcc -shared -fPIC -O2 -o libcripto.so benchmark.c -lcrypto
+```
+
+Para uma dependência fora dos diretórios padrão, use `-I/caminho/include`, `-L/caminho/lib`, `-lnome` e, se necessário, `-Wl,-rpath,/caminho/lib`. Mantenha as mesmas opções de compilação entre testes.
+
+## Analisar os resultados
 
 Instale as dependências: `python3 -m pip install matplotlib pandas`.
 
