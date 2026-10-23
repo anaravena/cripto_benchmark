@@ -211,33 +211,42 @@ def gerar(grupos, metricas, destino):
     galeria = ['<!doctype html><html lang="pt-BR"><meta charset="utf-8">',
                '<title>Comparação de benchmarks</title>',
                '<style>body{font-family:sans-serif;margin:2rem}img{max-width:100%;height:auto}'
-               'figure{margin:2rem 0}figcaption{overflow-wrap:anywhere}</style>',
+               'figure{margin:2rem 0}figcaption{overflow-wrap:anywhere}.tabela{overflow-x:auto}table{border-collapse:collapse}th,td{padding:.5rem;border:1px solid #ccc}th{text-align:left}</style>',
                '<h1>Comparação de benchmarks</h1><p><a href="resumo.csv">Resumo CSV</a></p>']
     for arquivo in arquivos:
         nome, url = html.escape(arquivo.name), html.escape(quote(arquivo.name))
         galeria.append(f'<figure><a href="{url}"><img src="{url}" alt="{nome}" loading="lazy"></a><figcaption>{nome}</figcaption></figure>')
-    galeria.append('<h2>Resumo estatístico</h2>')
-    galeria.append(dataframe.to_html(index=False, na_rep='n/a', float_format=lambda v: f'{v:.6g}', escape=True))
+    galeria.append('<h2>Tabelas de resumo</h2>')
+    galeria.append('<p>n/a: desvio padrão indisponível com uma amostra.</p>')
+    for titulo, tabela in tabelas_resumo(dataframe):
+        galeria.append(f'<h3>{html.escape(titulo)}</h3>')
+        galeria.append('<div class="tabela">' + tabela.to_html(
+            index=False, na_rep='n/a', float_format=lambda v: f'{v:.6g}', escape=True) + '</div>')
     (destino / 'index.html').write_text('\n'.join(galeria + ['</html>']), encoding='utf-8')
     return arquivos, dataframe
 
 
-def imprimir_tabelas(dataframe):
-    """Imprima cada observação do DataFrame sem agregar relatórios distintos."""
+def tabelas_resumo(dataframe):
+    """Compartilhe títulos, colunas e ordenação entre HTML e terminal."""
     colunas = ['label', 'data_size', 'n', 'media', 'desvio_padrao_amostral',
                'minimo', 'mediana', 'p95', 'maximo']
     nomes = {'label': 'Teste', 'data_size': 'Bytes', 'n': 'N', 'media': 'Média',
              'desvio_padrao_amostral': 'Desvio padrão', 'minimo': 'Mínimo',
              'mediana': 'Mediana', 'p95': 'P95', 'maximo': 'Máximo'}
-    print('\nTABELAS DE RESUMO (n/a: desvio padrão indisponível com uma amostra)')
     # dropna=False preserva funções que não recebem algoritmo.
     for (funcao, algoritmo, metrica), grupo in dataframe.groupby(
             ['funcao', 'algoritmo', 'metrica'], dropna=False, sort=False):
         titulo = funcao
         if isinstance(algoritmo, str):
             titulo += f' / {algoritmo}'
-        print(f'\n{titulo} — {METRICAS[metrica]}')
         tabela = grupo.sort_values(['data_size', 'label'], kind='stable')[colunas].rename(columns=nomes)
+        yield f'{titulo} — {METRICAS[metrica]}', tabela
+
+
+def imprimir_tabelas(dataframe):
+    print('\nTABELAS DE RESUMO (n/a: desvio padrão indisponível com uma amostra)')
+    for titulo, tabela in tabelas_resumo(dataframe):
+        print(f'\n{titulo}')
         print(tabela.to_string(index=False, na_rep='n/a', float_format=lambda v: f'{v:.6g}'))
 
 

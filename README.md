@@ -32,6 +32,6 @@ As colunas mostram média e desvio padrão amostral. Os boxplots continuam separ
 
 ## DataFrame e tabelas
 
-As estatísticas são reunidas em um `pandas.DataFrame`, com uma linha por relatório, função, algoritmo e métrica, preservando o tamanho de dados e o arquivo de origem. A função `gerar` retorna `(arquivos, dataframe)` para uso em Python. O DataFrame é exportado para `resumo.csv` e aparece como tabela na galeria HTML.
+As estatísticas são reunidas em um `pandas.DataFrame`, com uma linha por relatório, função, algoritmo e métrica, preservando o tamanho de dados e o arquivo de origem. A função `gerar` retorna `(arquivos, dataframe)` para uso em Python. O DataFrame completo é exportado para `resumo.csv`. No final da galeria HTML, as tabelas de resumo seguem os mesmos títulos, colunas, agrupamentos e ordenação do terminal, em vez de exibir uma tabela única com todos os campos.
 
 No final da execução, o terminal imprime tabelas por função, algoritmo e métrica, com teste, tamanho, número de amostras, média, desvio padrão, mínimo, mediana, P95 e máximo. Relatórios diferentes não são agregados. Com apenas uma amostra, o desvio padrão é `n/a`. A taxa usa o campo `taxa_kbps` informado pelo C, sem conversão de unidades. Os JSONs precisam conter essa métrica nas amostras; para relatórios antigos sem ela, selecione explicitamente as métricas disponíveis usando `--metricas`.
