@@ -12,7 +12,7 @@ python3 benchmark.py --biblioteca /caminho/libcripto.so \
   --data-size 512 --aquecimento 2 --json teste_512.json
 ```
 
-Repita com `--data-size 1024 --json teste_1024.json`, mantendo o mesmo label, para comparar tamanhos no analisador. Use `python3 benchmark.py --help` para listar as opções. Sem filtros, todas as funções e algoritmos são executados. O label é opcional e fica `null` no JSON quando omitido.
+Repita com `--data-size 1024 --json teste_1024.json`, mantendo o mesmo label, para comparar tamanhos no analisador. Os arquivos são salvos em `resultados/teste_512.json` e `resultados/teste_1024.json`. A pasta `resultados/` é criada automaticamente no diretório onde o comando é executado. `--json` define apenas o nome do arquivo; diretórios no argumento são ignorados. Sem `--json`, não há exportação. Use `python3 benchmark.py --help` para listar as opções. Sem filtros, todas as funções e algoritmos são executados. O label é opcional e fica `null` no JSON quando omitido.
 
 A ABI esperada é `int benchmark_<funcao>(Resultado *, int data_size)` para `cifracao`, `decifracao`, `cifra_autentica` e `decifra_verifica`. Para `keygen`, `assina` e `verifica`, há um terceiro argumento `int algorithm`: clássico=0, híbrido=1 e pós-quântico=2. A estrutura C `Resultado` contém, nesta ordem, `long operacoes_total` e os campos `double tempo_total_s`, `tempo_medio_ms`, `taxa_kbps`, `operacoes_por_segundo`, com alinhamento nativo. As funções selecionadas precisam estar exportadas, sem `static`; em C++, use `extern "C"`. A convenção de chamada é cdecl (`ctypes.CDLL`).
 
@@ -37,7 +37,7 @@ Instale as dependências: `python3 -m pip install matplotlib pandas`.
 Para comparar relatórios da mesma biblioteca com tamanhos diferentes:
 
 ```bash
-python3 benchmark_analysis.py teste_512.json teste_1024.json \
+python3 benchmark_analysis.py resultados/teste_512.json resultados/teste_1024.json \
   --funcoes assina \
   --metricas tempo_medio_ms operacoes_por_segundo taxa_kbps --saida comparacao_tamanhos
 ```

@@ -95,9 +95,11 @@ def executar(args):
             print(f'{campo:27} ' + ' '.join(f'{n:12.6g}' if n is not None else f'{"n/a":>12}' for n in numeros))
         print(f'Total: {operacoes} operações; {tempo:.6g} s reportados pelo C.')
     if args.json:
-        with Path(args.json).expanduser().open('w', encoding='utf-8') as arquivo:
+        destino = Path('resultados') / Path(args.json).name
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        with destino.open('w', encoding='utf-8') as arquivo:
             json.dump(relatorio, arquivo, ensure_ascii=False, indent=2, allow_nan=False)
-        print(f'\nRelatório JSON salvo em {args.json}')
+        print(f'\nRelatório JSON salvo em {destino.resolve()}')
     return relatorio
 
 
@@ -111,7 +113,7 @@ def main():
     parser.add_argument('--data-size', type=positivo, default=1024, help='Tamanho em bytes (padrão: 1024).')
     parser.add_argument('--aquecimento', type=int, default=0, help='Chamadas iniciais descartadas por função e algoritmo.')
     parser.add_argument('--retorno-sucesso', type=int, default=0, help='Código int de sucesso do C (padrão: 0).')
-    parser.add_argument('--json', metavar='ARQUIVO', help='Salvar estatísticas e amostras brutas em JSON.')
+    parser.add_argument('--json', metavar='ARQUIVO', help='Salvar JSON em resultados/ com o nome informado (diretórios no argumento são ignorados).')
     args = parser.parse_args()
     if args.aquecimento < 0:
         parser.error('--aquecimento deve ser maior ou igual a zero.')
